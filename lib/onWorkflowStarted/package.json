@@ -1,0 +1,20 @@
+{
+  "name": "github-app-eventbridge",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {
+    "@types/node": "^20.14.8",
+    "@types/aws-lambda": "^8.10.143",
+    "@aws-sdk/client-dynamodb": "^3.637.0",
+    "@aws-sdk/lib-dynamodb": "^3.637.0",
+    "@aws-sdk/client-sfn": "^3.637.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.2"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "tsc --build --clean",
+    "watch": "tsc --build -w",
+    "debug": "tsc --build && tsc --build && ts-node debug.ts"
+  }
+}

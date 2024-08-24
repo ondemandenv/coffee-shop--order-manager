@@ -8,11 +8,15 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "cdk-sa": "tsc --build && cross-env target_build_id=coffeeShopOrderManager target_rev_ref=b..master cdk synth --all --profile sandbox-workspace3",
+    "cdk-ls": "tsc --build && cross-env target_build_id=coffeeShopOrderManager target_rev_ref=b..master cdk ls --profile sandbox-workspace3"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/node": "20.14.9",
+    "@ondemandenv/odmd-contracts": "0.1.89-a14",
+    "cross-env": "^7.0.3",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.5",
     "aws-cdk": "2.149.0",
