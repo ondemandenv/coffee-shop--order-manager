@@ -19,7 +19,6 @@ export async function handler(event: EventBridgeEvent<any, any>, context: Contex
     const documentClient = DynamoDBDocument.from(new DynamoDB())
     const stepFunctions = new SFN()
 
-
     const params = {
         TableName: process.env.orderTableName,
         Key: {
@@ -51,4 +50,6 @@ export async function handler(event: EventBridgeEvent<any, any>, context: Contex
     console.log({sfnParams})
     const sfnResult = await stepFunctions.sendTaskSuccess(sfnParams)
     console.log({sfnResult})
+
+
 }
