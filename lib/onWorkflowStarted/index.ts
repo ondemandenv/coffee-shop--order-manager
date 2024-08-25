@@ -10,7 +10,9 @@ export async function handler(event: EventBridgeEvent<any, any>, context: Contex
 
     console.log(`>>>event
     ${JSON.stringify(event, null, 4)}
-----event----context----
+----event----env----
+    ${JSON.stringify(process.env, null, 4)}
+----env----context----
     ${JSON.stringify(context, null, 4)}
 <<<context`)
 
