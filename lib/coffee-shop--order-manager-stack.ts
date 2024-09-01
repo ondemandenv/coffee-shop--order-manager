@@ -1,17 +1,19 @@
 import * as cdk from 'aws-cdk-lib';
 import {Construct} from 'constructs';
-import {
-    CoffeeShopOrderManagerEnver
-} from "@ondemandenv/odmd-contracts/lib/repos/coffee-shop/coffee-shop-order-manager-cdk";
 import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
 import {ContractsEnverCdk} from "@ondemandenv/odmd-contracts/lib/odmd-model/contracts-enver-cdk";
-import {EventBus, Rule} from "aws-cdk-lib/aws-events";
+import {EventBus, IEventBus, Rule} from "aws-cdk-lib/aws-events";
 import {OndemandContracts} from "@ondemandenv/odmd-contracts";
 import {
     CoffeeShopOrderProcessorEnver
 } from "@ondemandenv/odmd-contracts/lib/repos/coffee-shop/coffee-shop-order-processor-cdk";
-import {AttributeType, BillingMode, Table} from "aws-cdk-lib/aws-dynamodb";
+import {AttributeType, BillingMode, ITable, Table} from "aws-cdk-lib/aws-dynamodb";
 import {aws_events_targets, RemovalPolicy} from "aws-cdk-lib";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as sfn from "aws-cdk-lib/aws-stepfunctions";
+import {StateMachineCompleteCancel} from "./state-machine-complete-cancel";
+import {StateMachineClaimMake} from "./state-machine-claimOrder";
+import {StateMachinePutOrder} from "./state-machine-putOrder";
 
 
 export class CoffeeShopOrderManagerStack extends cdk.Stack {
@@ -20,7 +22,7 @@ export class CoffeeShopOrderManagerStack extends cdk.Stack {
         super(scope, id, props);
 
         const myEnver = enver as CoffeeShopOrderProcessorEnver
-        const eventBus = EventBus.fromEventBusName(this, 'eventBus', myEnver.eventBus.getSharedValue(this))
+        const eventBus: IEventBus = EventBus.fromEventBusName(this, 'eventBus', myEnver.eventBus.getSharedValue(this))
         const source = myEnver.eventSrc.getSharedValue(this) as string
 
         // const configTable = Table.fromTableName(this, 'configTable', myEnver.configTableName.getSharedValue(this))
@@ -53,6 +55,29 @@ export class CoffeeShopOrderManagerStack extends cdk.Stack {
             )]
         })
         orderTable.grantFullAccess(onWorkflowStartedFunc)
+
+
+        const configTable: ITable = dynamodb.Table.fromTableName(this, 'ConfigTable', myEnver.configTableName.getSharedValue(this));
+
+        const cc = new StateMachineCompleteCancel(this, 'StateMachineCompleteCancel', eventBus, orderTable)
+        const sm = new StateMachineClaimMake(this, 'StateMachineClaimMake', eventBus, orderTable)
+        const po = new StateMachinePutOrder(this, 'StateMachinePutOrder', configTable, orderTable)
+
+
+        // Define states
+        const decideAction = new sfn.Choice(this, 'Decide Action');
+        // Define state machine
+        const stateMachine = new sfn.StateMachine(this, 'ServerlesspressoStateMachine', {
+            definitionBody: sfn.DefinitionBody.fromChainable(
+                decideAction
+                    .when(sfn.Condition.stringEquals('$.action', 'complete'), cc.completeOrder)
+                    .when(sfn.Condition.stringEquals('$.action', 'cancel'), cc.cancelOrder)
+                    .when(sfn.Condition.stringEquals('$.action', 'make'), sm.claimOrder)
+                    .when(sfn.Condition.stringEquals('$.action', 'unmake'), sm.claimOrder)
+                    .otherwise(po.customerPutOrder)
+            ),
+            // Add other necessary properties like logging, tracing, etc.
+        });
 
 
     }
