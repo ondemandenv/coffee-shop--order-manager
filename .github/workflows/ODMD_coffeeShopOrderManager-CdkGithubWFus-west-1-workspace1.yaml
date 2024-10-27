@@ -28,7 +28,7 @@ jobs:
         with:
           aws_credentials: ${{github.event.inputs.aws_credentials}}
           trigger_message: ${{github.event.inputs.message}}
-          envar_stackName: odmd-ctl-BUILD-coffeeShopOrderManager-590184130740-PP
+          envar_stackName: undefined
         env:
           ODMD_buildId: coffeeShopOrderManager
           ODMD_awsRegion: us-west-1
