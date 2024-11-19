@@ -1,12 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
-import {ContractsEnverCdk} from "@ondemandenv/odmd-contracts/lib/odmd-model/contracts-enver-cdk";
 import {EventBus, IEventBus, Rule} from "aws-cdk-lib/aws-events";
-import {OndemandContracts} from "@ondemandenv/odmd-contracts";
-import {
-    CoffeeShopOrderProcessorEnver
-} from "@ondemandenv/odmd-contracts/lib/repos/coffee-shop/coffee-shop-order-processor-cdk";
 import {AttributeType, BillingMode, ITable, Table} from "aws-cdk-lib/aws-dynamodb";
 import {aws_events_targets, RemovalPolicy} from "aws-cdk-lib";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
@@ -14,10 +9,12 @@ import * as sfn from "aws-cdk-lib/aws-stepfunctions";
 import {StateMachineCompleteCancel} from "./state-machine-complete-cancel";
 import {StateMachineClaimMake} from "./state-machine-claimOrder";
 import {StateMachinePutOrder} from "./state-machine-putOrder";
+import {OdmdEnverCdk} from "@ondemandenv/contracts-lib-base";
+import {CoffeeShopOrderProcessorEnver, OndemandContractsSandbox} from "@ondemandenv/odmd-contracts-sandbox";
 
 
 export class CoffeeShopOrderManagerStack extends cdk.Stack {
-    constructor(scope: Construct, enver: ContractsEnverCdk, props?: cdk.StackProps) {
+    constructor(scope: Construct, enver: OdmdEnverCdk, props?: cdk.StackProps) {
         const id = enver.getRevStackNames()[0];
         super(scope, id, props);
 
@@ -48,7 +45,7 @@ export class CoffeeShopOrderManagerStack extends cdk.Stack {
         new Rule(this, 'onWorkflowStarted-rule', {
             eventBus, eventPattern: {
                 source: [source],
-                detailType: [OndemandContracts.inst.coffeeShopOrderProcessorCdk.WORKFLOW_STARTED]
+                detailType: [OndemandContractsSandbox.inst.coffeeShopOrderProcessorCdk.WORKFLOW_STARTED]
             },
             targets: [new aws_events_targets.LambdaFunction(
                 onWorkflowStartedFunc
